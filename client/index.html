@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IOT</title>
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="./fonts/themify-icons-font/themify-icons/themify-icons.css">
+</head>
+
+<body>
+    <div id="header">
+        <div id="menu" class="menu-btn">
+            <i class="menu-icon ti-menu"></i>
+            <ul class="sidebar">
+                <li>Dashboard</li>
+                <li>Profile</li>
+                <li>Sensor Data</li>
+                <li>Action</li>
+            </ul>
+        </div>
+    </div>
+    <div id="dashboard">
+        <!-- <div class="container">
+            <div class="item temp" id="tp">
+                <h2>Nhiệt độ</h2>
+                <h3 style="display: inline;" id="nhietdo">20</h3> <sup>o</sup>C
+            </div>
+            <div class="item humid" id="hm">
+                <h2>Độ ẩm</h2>
+                <h3 style="display: inline;" id="doam">80%</h3>
+            </div>
+            <div class="item light" id="lt">
+                <h2>Ánh sáng</h2>
+                <h3 style="display: inline;" id="as">100 lux</h3>
+            </div>
+        </div> -->
+
+        <div class="monitor_sensor">
+            <div class="humidity" id="humidity">
+                <div>Độ Ẩm (%)</div>
+                <div id="humi" style="font-size: 20px; font-weight: bold;"></div>
+            </div>
+            <div class="temperature" id="temperature">
+                <div>Nhiệt Độ (Độ)</div>
+                <div id="temp" style="font-size: 20px; font-weight: bold;"></div>
+            </div> 
+            <div class="brightness" id="brightness">
+                <div>Ánh Sáng (Lux)</div>
+                <div id="bright" style="font-size: 20px; font-weight: bold;"></div>
+            </div>
+        </div>
+
+        <div class="container-2">
+            <div class="chart_sensor">
+                <canvas id="mychart"></canvas>
+            </div>
+
+            <div class="item-3">
+                <div id="1" class="device light">
+                    <img src="img/images.png" alt="Đèn">
+                    <div class="button-container">
+                        <button class="button-class button-class-on" id="ledon">ON</button>
+                        <button class="button-class button-class-off" id="ledoff">OFF</button>
+                    </div>
+                </div>
+                <div id="2" class="device fan">
+                    <img src="img/fan-static2.png" alt="Quạt">
+                    <div class="button-container">
+                        <button class="button-class button-class-on">ON</button>
+                        <button class="button-class button-class-off">OFF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="profile">
+        <div class="image">
+            <img src="img/profile-img.jpg" alt="ảnh profile">
+        </div>
+        <div class="info">
+            <h2>Họ tên: Lường Thanh Huy</h2>
+            <h2>Lớp: D20HTTT06</h2>
+            <h2>MÃ SV: B20DCCN312</h2>
+        </div>
+    </div>
+    <div id="sensor-data">
+        <table>
+            <thead>
+                <tr>
+                    <td>ID</td>
+                    <td>Humidity</td>
+                    <td>Temperature</td>
+                    <td>Light</td>
+                    <td>Time</td>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+    <div id="action">
+        <table>
+            <thead>
+                <tr>
+                    <td>ID</td>
+                    <td>Device ID</td>
+                    <td>Action</td>
+                    <td>Time</td>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+<script>
+        const colorTemp = ['#FFE6E6', '#FFCDCD', '#FFB3B3', '#FF9A9A', '#FF8080', '#FF6666', '#FF4D4D', '#FF3333', '#FF1A1A', '#FF0000'];
+        const colorHumi = ["#E3F2FD", "#BBDEFB", "#90CAF9", "#64B5F6", "#42A5F5", "#2196F3", "#1E88E5", "#1976D2", "#1565C0", "#0D47A1"];
+        const colorBright = ["#FFFDE7", "#FFF9C4", "#FFF59D", "#FFF176", "#FFEE58", "#FFEB3B", "#FDD835", "#FBC02D", "#F9A825", "#F57F17"];
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Đèn tắt
+            const btoff = document.querySelector(".device.light .button-class:last-child");
+            // Ảnh đèn
+            const lightimg = document.querySelector(".device.light img");
+
+            // Đèn bật
+            const bton = document.querySelector(".device.light .button-class:first-child");
+
+            // Quạt bật
+            const fanon = document.querySelector(".device.fan .button-class:first-child");
+
+            // Quạt tắt
+            const fanoff = document.querySelector(".device.fan .button-class:last-child");
+            
+            // Ảnh quạt
+            const fanimg = document.querySelector(".device.fan img");
+
+
+            const sidebarItem = document.querySelectorAll(".sidebar li");
+            
+            const dashboard = document.getElementById("dashboard");
+            const profile = document.getElementById("profile");
+            const sensor = document.getElementById("sensor-data");
+            const action = document.getElementById("action");
+            //const deviceid = document.getElementById();
+
+            let idAction = 1;
+
+            function updateAction(deviceID, action) {
+                const actionData = document.getElementById("action").getElementsByTagName('tbody')[0];
+
+                const newRow = actionData.insertRow();
+
+                const currentTime = new Date();
+
+                const IDCell = newRow.insertCell(0)
+                const deviceIDCell = newRow.insertCell(1)
+                const actionCell = newRow.insertCell(2)
+                const timeCell = newRow.insertCell(3)
+                
+                IDCell.textContent = idAction++;
+                deviceIDCell.textContent = deviceID;
+                actionCell.textContent = action;
+                timeCell.textContent = currentTime.toLocaleTimeString();
+                
+            }
+
+            btoff.addEventListener("click", function () {
+                lightimg.src = "img/images.jpg";
+                updateAction(1, "OFF");
+            });
+
+            bton.addEventListener("click", function () {
+                lightimg.src = "img/images.png";
+                updateAction(1, "ON");
+            });
+
+            fanoff.addEventListener("click", function () {
+                fanimg.src = "img/fan-static2.png";
+                updateAction(2, "OFF");
+            });
+
+            fanon.addEventListener("click", function () {
+                fanimg.src = "img/fan-animate2.gif";
+                updateAction(2, "ON");
+            });
+
+            sidebarItem.forEach(function (item) {
+                item.addEventListener("click", function () {
+                    dashboard.style.display = "none";
+                    profile.style.display = "none";
+                    sensor.style.display = "none";
+                    action.style.display = "none";
+
+                    if (item.textContent === "Dashboard") {
+                        dashboard.style.display = "block";
+                    } else if (item.textContent === "Profile") {
+                        profile.style.display = "flex";
+                    } else if (item.textContent === "Sensor Data") {
+                        sensor.style.display = "flex";
+                    }else if (item.textContent === "Action"){
+                        action.style.display = "flex";
+                    }
+                })
+            })
+
+        });
+
+        // Lấy tham chiếu đến thẻ canvas
+        const ctx = document.getElementById('chartCanvas');
+
+        // Dữ liệu giả tạo cho độ ẩm, ánh sáng và nhiệt độ
+        const humidityData = [];
+        const lightData = [];
+        const temperatureData = [];
+
+
+        // Biểu đồ dạng đa đường
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Thời điểm 1', 'Thời điểm 2', 'Thời điểm 3', 'Thời điểm 4', 'Thời điểm 5', 'Thời điểm 6', 'Thời điểm 7', 'Thời điểm 8', 'Thời điểm 9', 'Thời điểm 10'],
+                datasets: [
+                    {
+                        label: 'Nhiệt độ',
+                        data: temperatureData,
+                        borderColor: 'red',
+                        fill: true
+                    },
+                    {
+                        label: 'Độ ẩm',
+                        data: humidityData,
+                        borderColor: 'green',
+                        fill: true
+                    },
+                    {
+                        label: 'Ánh sáng',
+                        data: lightData,
+                        borderColor: 'orange',
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                //responsive: true,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Thời gian'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Giá trị'
+                        }
+                    }
+                }
+            }
+        });
+        function updateArrayAndChart() {
+            let newData = Math.floor(Math.random() * 100) + 1;
+            let newData1 = Math.floor(Math.random() * 100) + 1;
+            let newData2 = Math.floor(Math.random() * 100) + 1;
+            if (humidityData.length > 9)
+                humidityData.shift();
+            humidityData.push(newData);
+            if (temperatureData.length > 9)
+                temperatureData.shift();
+            temperatureData.push(newData1);
+            if (lightData.length > 9)
+                lightData.shift();
+            lightData.push(newData2);
+            let x = document.getElementById('doam');
+            let x1 = document.getElementById('nhietdo');
+            let x2 = document.getElementById('as');
+            x.textContent = `${newData.toFixed(1)} %`;
+            x1.textContent = `${newData1.toFixed(1)}`;
+            x2.textContent = `${newData2.toFixed(1)} LUX`;
+
+            const xs = document.getElementById("tp");
+            const xs1 = document.getElementById("hm");
+            const xs2 = document.getElementById("lt");
+
+            chart.update();
+
+            if (parseFloat(newData1.toFixed(1)) > 50)
+                xs.style.background = "red";
+            else {
+                xs.style.background = "#ea7d7d";
+            }
+            if (parseFloat(newData.toFixed(1)) > 50)
+                xs1.style.background = "green";
+            else {
+                xs1.style.background = "#3bd23b";
+            }
+            if (parseFloat(newData2.toFixed(1)) > 50)
+                xs2.style.background = "orange";
+            else {
+                xs2.style.background = "yellow";
+            }
+        }
+        let idcount = 1;
+
+        function updateSensortable() {
+            const sensorData = document.getElementById("sensor-data").getElementsByTagName('tbody')[0];
+
+            const newRow = sensorData.insertRow();
+
+            while (sensorData.rows.length > 10) {
+                sensorData.deleteRow(0);
+            }
+
+            const currentTime = new Date();
+
+            const IDCell = newRow.insertCell(0)
+            const timeCell = newRow.insertCell(1)
+            const tempCell = newRow.insertCell(2)
+            const humidCell = newRow.insertCell(3)
+            const lightCell = newRow.insertCell(4)
+
+            IDCell.textContent = idcount++;
+            timeCell.textContent = currentTime.toLocaleTimeString();
+            tempCell.textContent = temperatureData[temperatureData.length - 1] + " độ";
+            humidCell.textContent = humidityData[humidityData.length - 1] + " %";
+            lightCell.textContent = lightData[lightData.length - 1] + " lux";
+
+        }
+
+
+        setInterval(function () {
+            updateArrayAndChart(),
+                updateSensortable()
+        }, 2000);
+    </script>
+</body>
+
+</html>
